@@ -31,8 +31,8 @@ dep_parser = pretrained.load_predictor("structured-prediction-biaffine-parser")
 
 
 # function string nan
-def isNaN(string):
-    return string != string
+def isNaN(s):
+    return s != s
 
 
 # In[3]:

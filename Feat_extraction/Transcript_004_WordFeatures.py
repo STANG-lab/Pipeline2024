@@ -461,10 +461,8 @@ for aggregate in all_aggregate_files:
     l_md_aoa = df["aoa_AoA"].dropna().median()
     l_md_semd = df["semd_SemD"].dropna().median()
     l_md_concrete = df["conc_rate"].dropna().median()
-
     # l_md_prevalence = df['prevalence'].dropna().mean() #### !!!!!!!!!!!!!!!!!!!
     l_md_prevalence = df["prevalence"].dropna().median()
-
     l_md_wordfreq = df["subtlex_wf"].dropna().median()
     l_md_contextdiversity = df["subtlex_cd"].dropna().median()
 

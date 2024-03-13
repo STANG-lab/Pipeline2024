@@ -2,6 +2,14 @@ import pandas as pd
 
 
 # SENTIMENT DICTIONARIES
+
+def extract_column(df, k):
+    d = {}
+    for index, row in df.iterrows():
+        d[row["Word"].lower()] = row[k]
+    return d
+
+
 def get_sent_dics():
     sent_dic = {}
     valence_dic = {}
@@ -49,28 +57,21 @@ def get_lex_dics():
 
     calg_conc = pd.read_excel("lexical_dictionaries//3_CalgaryConcrete.xlsx")
     calg_conc["Word"] = calg_conc["Word"].astype(str)
-    for index, row in calg_conc.iterrows():
-        calg_conc_dic[row["Word"].lower()] = row["WordType"]
+    calg_conc_dic = extract_column(calg_conc, "WordType")
 
-    rate_conc_dic = {}
 
     rate_conc = pd.read_excel("lexical_dictionaries//4_ConcRate.xlsx")
     rate_conc["Word"] = rate_conc["Word"].astype(str)
-    for index, row in rate_conc.iterrows():
-        rate_conc_dic[row["Word"].lower()] = row["Conc.M"]
+    rate_conc_dic = extract_column(rate_conc, "Conc.M")
 
-    prevalence_dic = {}
     prevalence_df = pd.read_excel("lexical_dictionaries//5_prevalence.xlsx")
     prevalence_df["Word"] = prevalence_df["Word"].astype(str)
-    for index, row in prevalence_df.iterrows():
-        prevalence_dic[row["Word"].lower()] = row["Prevalence"]
+    prevalence_dic = extract_column(prevalence_df, "Prevalence")
 
     iconicity_dic = {}
     iconicity_df = pd.read_csv("lexical_dictionaries//6_iconicity.csv")
     iconicity_df["word"] = iconicity_df["word"].astype(str)
-    for index, row in iconicity_df.iterrows():
-        iconicity_dic[row["word"].lower()] = row["rating"]
-
+    iconicity_dic = extract_column(iconicity_df, "rating")
     sensorimotor = [
         "Auditory.mean",
         "Gustatory.mean",
@@ -98,10 +99,8 @@ def get_lex_dics():
         for each_item in subtlex:
             subtlex_dic[(row["Word"].lower(), each_item)] = row[each_item]
 
-    taboo_dic = {}
     taboo_df = pd.read_csv("lexical_dictionaries//9_taboo.csv")
-    for index, row in taboo_df.iterrows():
-        taboo_dic[row["Word"].lower()] = row["Taboo"]
+    taboo_dic = extract_column(taboo_df, "Taboo")
 
     glasgow = ["IMAG", "GEND", "SIZE"]
     glasgow_dic = {}
