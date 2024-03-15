@@ -18,8 +18,9 @@ pipeline = ASRDiarizationPipeline.from_pretrained(
     #asr_model="openai/whisper-medium",
     asr_model="openai/whisper-tiny",
     diarizer_model="pyannote/speaker-diarization",
-    use_auth_token="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",
+    use_auth_token="",
     chunk_length_s=30,
+    stride_length_s=(4,2),
     device=device,
 )
 
