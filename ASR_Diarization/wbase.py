@@ -36,7 +36,7 @@ def conv_sr(audio_file_path, desired_sr=16000):
 
 def test_models(audio_file_path, mod_list, device):
     #audio = conv_sr(audio_file_path)[:, 0]
-    audio = conv_sr(audio_file_path).mean(axis=1)  # One channel only for HF pipeline.
+    audio = conv_sr(audio_file_path).mean(axis=1)  # One channel audio only for HF pipeline.
     for mod in mod_list:
         s = time.time()
         pipe = pipeline(
@@ -44,17 +44,20 @@ def test_models(audio_file_path, mod_list, device):
           model=mod,
           device=device
         )
-        pred = pipe(audio, batch_size=1, return_timestamps="word", chunk_length_s=30, stride_length_s=(4,4))["text"]
+        try:
+            pred = pipe(audio, batch_size=1, return_timestamps="word", chunk_length_s=20, stride_length_s=(4,2))["text"]
+        except torch.cuda.OutOfMemoryError:
+            pred = "Not enough GPU memory"
         #TODO: test stride lengths
         dur = time.time() - s
-        with open(f"{mod.split('/')[-1]}_{audio_file_path.split('.')[0]}.txt", "a+") as f:
+        with open(f"{mod.split('/')[-1]}_{audio_file_path.split('.')[0]}.txt", "w") as f:
             print("Duration:", str(dur), file=f)
             print(pred,file=f)
 
 if __name__=="__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    aud_file="hmm.mp3"
-    # aud_file = "10316_2.wav"
+    # aud_file="hmm.mp3"
+    aud_file = "10316_2.wav"
 
     # models = ["facebook/wav2vec2-base-960h", "openai/whisper-large-v2", "openai/whisper-medium"]
     models = ["facebook/wav2vec2-base-960h", "openai/whisper-medium", "openai/whisper-small", "openai/whisper-tiny", "openai/whisper-large"]
