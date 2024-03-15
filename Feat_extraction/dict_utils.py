@@ -1,6 +1,8 @@
 import pandas as pd
 
+#TODO: Clean this up for readability
 
+# This code is factored out from 004, and just grabs sentiment and lexical dictionaries.
 # SENTIMENT DICTIONARIES
 
 def extract_column(df, k):
