@@ -2,7 +2,7 @@ import pandas as pd
 
 #TODO: Clean this up for readability
 
-# This code is factored out from 004, and just grabs sentiment and lexical dictionaries.
+# This code is originally from 004_WordFeatures
 # SENTIMENT DICTIONARIES
 
 def extract_column(df, k):
@@ -12,6 +12,66 @@ def extract_column(df, k):
     return d
 
 
+def get_me_dic(df)
+    # These all have naming idiosyncracies, so they're manually filled in
+    l_me_valence = df["sent_valence"].dropna().mean()
+    l_me_arousal = df["sent_arousal"].dropna().mean()
+    l_me_dominance = df["sent_dominance"].dropna().mean()
+    l_me_imagibility = df["glasgow_imagibility"].dropna().mean()
+    l_me_gender = df["glasgow_gender"].dropna().mean()
+    l_me_size = df["glasgow_size"].dropna().mean()
+    l_me_auditory = df["sm_auditory"].dropna().mean()
+    l_me_gustatory = df["sm_gustatory"].dropna().mean()
+    l_me_haptic = df["sm_haptic"].dropna().mean()
+    l_me_interoception = df["sm_interoceptive"].dropna().mean()
+    l_me_olfaction = df["sm_olfactory"].dropna().mean()
+    l_me_visual = df["sm_visual"].dropna().mean()
+    l_me_footleg = df["sm_foot_leg"].dropna().mean()
+    l_me_handarm = df["sm_hand_arm"].dropna().mean()
+    l_me_head = df["sm_head"].dropna().mean()
+    l_me_mouth = df["sm_mouth"].dropna().mean()
+    l_me_torso = df["sm_torso"].dropna().mean()
+    l_me_sensory = mean(
+        [
+            l_me_auditory,
+            l_me_gustatory,
+            l_me_haptic,
+            l_me_interoception,
+            l_me_olfaction,
+            l_me_visual,
+        ]
+    )
+    l_me_motor = mean([l_me_footleg, l_me_handarm, l_me_head, l_me_mouth, l_me_torso])
+    try:
+        l_me_taboo = df["taboo"].dropna().mean()
+    except:
+        pass
+    me_dic = {
+        "l_me_auditory": l_me_auditory,
+        "l_me_gustatory": l_me_gustatory,
+        "l_me_haptic": l_me_haptic,
+        "l_me_interoception": l_me_interoception,
+        "l_me_olfaction": l_me_olfaction,
+        "l_me_visual": l_me_visual,
+        "l_me_footleg": l_me_footleg,
+        "l_me_handarm": l_me_handarm,
+        "l_me_head": l_me_head,
+        "l_me_mouth": l_me_mouth,
+        "l_me_torso": l_me_torso,
+        "l_me_sensory": l_me_sensory,
+        "l_me_motor": l_me_motor,
+        "l_me_valence": l_me_valence,
+        "l_me_arousal": l_me_arousal,
+        "l_me_dominance": l_me_dominance,
+        "l_me_imagibility": l_me_imagibility,
+        "l_me_gender": l_me_gender,
+        "l_me_size": l_me_size,
+        "l_me_taboo": l_me_taboo,
+
+    }
+    return me_dic
+
+# Sentiment Dictionaries
 def get_sent_dics():
     sent_dic = {}
     valence_dic = {}

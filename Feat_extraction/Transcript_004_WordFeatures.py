@@ -448,23 +448,35 @@ report_df = pd.DataFrame(
         "filename",
     ]
 )
+reports = []  
 for aggregate in all_aggregate_files:
-    reports = []
     df = pd.read_csv(drive_wordlevel_out_path + aggregate)
     filename = aggregate.split(".")[0]
     df = df.loc[df["speaker"] == "Subject"].copy()
     l_n_words = len(df)
-
     l_mx_syllable = df["aoa_NSyll"].dropna().quantile(0.95)
     l_mx_aoa = df["aoa_AoA"].dropna().quantile(0.95)
-
+    mx_dic = {
+        "l_mx_syllable": l_mx_syllable,
+        "l_mx_aoa": l_mx_aoa,
+    }
+    
     l_md_aoa = df["aoa_AoA"].dropna().median()
     l_md_semd = df["semd_SemD"].dropna().median()
     l_md_concrete = df["conc_rate"].dropna().median()
-    # l_md_prevalence = df['prevalence'].dropna().mean() #### !!!!!!!!!!!!!!!!!!!
     l_md_prevalence = df["prevalence"].dropna().median()
     l_md_wordfreq = df["subtlex_wf"].dropna().median()
     l_md_contextdiversity = df["subtlex_cd"].dropna().median()
+    
+    l_md_dic = {
+        "l_md_aoa": l_md_aoa,
+        "l_md_semd": l_md_semd,
+        "l_md_concrete": l_md_concrete,
+        "l_md_wordfreq": l_md_wordfreq,
+        "l_md_contextdiversity": l_md_contextdiversity,
+    }
+
+    l_me_dic = get_me_dic(df)
 
     def l_n_norm(x):
         try:
@@ -474,143 +486,30 @@ for aggregate in all_aggregate_files:
 
     l_w_emotions = {f"l_w_{emo}": l_n_norm(f"sent_{emo}") for emo in emotions}
 
-    l_me_valence = df["sent_valence"].dropna().mean()
-    l_me_arousal = df["sent_arousal"].dropna().mean()
-    l_me_dominance = df["sent_dominance"].dropna().mean()
-    l_me_imagibility = df["glasgow_imagibility"].dropna().mean()
-    l_me_gender = df["glasgow_gender"].dropna().mean()
-    l_me_size = df["glasgow_size"].dropna().mean()
-    l_me_auditory = df["sm_auditory"].dropna().mean()
-    l_me_gustatory = df["sm_gustatory"].dropna().mean()
-    l_me_haptic = df["sm_haptic"].dropna().mean()
-    l_me_interoception = df["sm_interoceptive"].dropna().mean()
-    l_me_olfaction = df["sm_olfactory"].dropna().mean()
-    l_me_visual = df["sm_visual"].dropna().mean()
-    l_me_footleg = df["sm_foot_leg"].dropna().mean()
-    l_me_handarm = df["sm_hand_arm"].dropna().mean()
-    l_me_head = df["sm_head"].dropna().mean()
-    l_me_mouth = df["sm_mouth"].dropna().mean()
-    l_me_torso = df["sm_torso"].dropna().mean()
-    l_me_sensory = mean(
-        [
-            l_me_auditory,
-            l_me_gustatory,
-            l_me_haptic,
-            l_me_interoception,
-            l_me_olfaction,
-            l_me_visual,
-        ]
-    )
-    l_me_motor = mean([l_me_footleg, l_me_handarm, l_me_head, l_me_mouth, l_me_torso])
-    try:
-        l_me_taboo = df["taboo"].dropna().mean()
-    except:
-        pass
-
     abs_conc_counter = Counter()
     pos_counter = Counter()
+
     for index, row in df.iterrows():
         conc_list = ast.literal_eval(row["conc_type"])
         abs_conc_counter.update(conc_list)
         pos_list = ast.literal_eval(row["sp.pos"])
         pos_counter.update(pos_list)
+
     l_n_dict = pos_counter.update(
         {key.lower(): abs_conc_counter[key] for key in abs_conc_counter.keys()}
     )
     l_n_dict["stopwords"] = df["is_stopword"].sum()
     l_n_dict["syllable"] = df["aoa_NSyll"].sum()
 
+
     # Enforce appropriate key formats
     l_w_dict = {f"l_w_{key}": l_n_norm(l_n_dict[key]) for key in l_n_dict.keys()}
     l_w_dict.update(l_w_emotions)
+
     l_n_dict["words"] = l_n_words
     l_n_dict = {f"l_n_{key}": l_n_dict[key] for key in l_n_dict.keys()}
 
-    # TODO: Replace with dictionary union of l_n, l_w, l_md, l_me
-    each_report = pd.DataFrame(
-        [
-            {
-                "filename": filename,
-                "l_n_words": l_n_words,
-                "l_n_stopwords": l_n_stopwords,
-                "l_w_stopwords": l_w_stopwords,
-                "l_n_syllable": l_n_syllable,
-                "l_w_syllable": l_w_syllable,
-                "l_mx_syllable": l_mx_syllable,
-                "l_md_aoa": l_md_aoa,
-                "l_mx_aoa": l_mx_aoa,
-                "l_md_semd": l_md_semd,
-                "l_md_concrete": l_md_concrete,
-                "l_md_prevalence": l_md_prevalence,
-                "l_me_auditory": l_me_auditory,
-                "l_me_gustatory": l_me_gustatory,
-                "l_me_haptic": l_me_haptic,
-                "l_me_interoception": l_me_interoception,
-                "l_me_olfaction": l_me_olfaction,
-                "l_me_visual": l_me_visual,
-                "l_me_footleg": l_me_footleg,
-                "l_me_handarm": l_me_handarm,
-                "l_me_head": l_me_head,
-                "l_me_mouth": l_me_mouth,
-                "l_me_torso": l_me_torso,
-                "l_me_sensory": l_me_sensory,
-                "l_me_motor": l_me_motor,
-                "l_md_wordfreq": l_md_wordfreq,
-                "l_md_contextdiversity": l_md_contextdiversity,
-                "l_w_anger": l_w_anger,
-                "l_w_anticipation": l_w_anticipation,
-                "l_w_disgust": l_w_disgust,
-                "l_w_fear": l_w_fear,
-                "l_w_joy": l_w_joy,
-                "l_w_negative": l_w_negative,
-                "l_w_positive": l_w_positive,
-                "l_w_sadness": l_w_sadness,
-                "l_w_surprise": l_w_surprise,
-                "l_w_trust": l_w_trust,
-                "l_me_valence": l_me_valence,
-                "l_me_arousal": l_me_arousal,
-                "l_me_dominance": l_me_dominance,
-                "l_me_imagibility": l_me_imagibility,
-                "l_me_gender": l_me_gender,
-                "l_me_size": l_me_size,
-                "l_me_taboo": l_me_taboo,
-                "l_n_concrete": l_n_concrete,
-                "l_n_abstract": l_n_abstract,
-                "l_n_INTJ": l_n_INTJ,
-                "l_n_PROPN": l_n_PROPN,
-                "l_n_NUM": l_n_NUM,
-                "l_n_VERB": l_n_VERB,
-                "l_n_NOUN": l_n_NOUN,
-                "l_n_ADV": l_n_ADV,
-                "l_n_ADJ": l_n_ADJ,
-                "l_n_ADP": l_n_ADP,
-                "l_n_PRON": l_n_PRON,
-                "l_n_AUX": l_n_AUX,
-                "l_n_DET": l_n_DET,
-                "l_n_SCONJ": l_n_SCONJ,
-                "l_n_PART": l_n_PART,
-                "l_n_CCONJ": l_n_CCONJ,
-                "l_n_X": l_n_X,
-                "l_w_concrete": l_w_concrete,
-                "l_w_abstract": l_w_abstract,
-                "l_w_INTJ": l_w_INTJ,
-                "l_w_PROPN": l_w_PROPN,
-                "l_w_NUM": l_w_NUM,
-                "l_w_VERB": l_w_VERB,
-                "l_w_NOUN": l_w_NOUN,
-                "l_w_ADV": l_w_ADV,
-                "l_w_ADJ": l_w_ADJ,
-                "l_w_ADP": l_w_ADP,
-                "l_w_PRON": l_w_PRON,
-                "l_w_AUX": l_w_AUX,
-                "l_w_DET": l_w_DET,
-                "l_w_SCONJ": l_w_SCONJ,
-                "l_w_PART": l_w_PART,
-                "l_w_CCONJ": l_w_CCONJ,
-                "l_w_X": l_w_X,
-            }
-        ]
-    )
+    each_report = pd.DataFrame(l_n_dict | l_w_dict | l_me_dic | l_md_dic) # TODO: Make this better, dict union is slow
     reports.append(each_report)
 
 report_df = pd.concat(reports, ignore_index=True)
@@ -620,11 +519,95 @@ report_df.to_csv(root_data + feature_folder + "//4_lexical_features.csv")
 # In[109]:
 
 
-report_df
+# report_df
 
 
 # In[106]:
 
+# each_report = pd.DataFrame(
+#     [
+#         {
+#             "filename": filename,
+#             "l_n_words": l_n_words,
+#             "l_n_stopwords": l_n_stopwords,
+#             "l_w_stopwords": l_w_stopwords,
+#             "l_n_syllable": l_n_syllable,
+#             "l_w_syllable": l_w_syllable,
+#             "l_mx_syllable": l_mx_syllable,
+#             "l_md_aoa": l_md_aoa,
+#             "l_mx_aoa": l_mx_aoa,
+#             "l_md_semd": l_md_semd,
+#             "l_md_concrete": l_md_concrete,
+#             "l_md_prevalence": l_md_prevalence,
+#             "l_me_auditory": l_me_auditory,
+#             "l_me_gustatory": l_me_gustatory,
+#             "l_me_haptic": l_me_haptic,
+#             "l_me_interoception": l_me_interoception,
+#             "l_me_olfaction": l_me_olfaction,
+#             "l_me_visual": l_me_visual,
+#             "l_me_footleg": l_me_footleg,
+#             "l_me_handarm": l_me_handarm,
+#             "l_me_head": l_me_head,
+#             "l_me_mouth": l_me_mouth,
+#             "l_me_torso": l_me_torso,
+#             "l_me_sensory": l_me_sensory,
+#             "l_me_motor": l_me_motor,
+#             "l_md_wordfreq": l_md_wordfreq,
+#             "l_md_contextdiversity": l_md_contextdiversity,
+#             "l_w_anger": l_w_anger,
+#             "l_w_anticipation": l_w_anticipation,
+#             "l_w_disgust": l_w_disgust,
+#             "l_w_fear": l_w_fear,
+#             "l_w_joy": l_w_joy,
+#             "l_w_negative": l_w_negative,
+#             "l_w_positive": l_w_positive,
+#             "l_w_sadness": l_w_sadness,
+#             "l_w_surprise": l_w_surprise,
+#             "l_w_trust": l_w_trust,
+#             "l_me_valence": l_me_valence,
+#             "l_me_arousal": l_me_arousal,
+#             "l_me_dominance": l_me_dominance,
+#             "l_me_imagibility": l_me_imagibility,
+#             "l_me_gender": l_me_gender,
+#             "l_me_size": l_me_size,
+#             "l_me_taboo": l_me_taboo,
+#             "l_n_concrete": l_n_concrete,
+#             "l_n_abstract": l_n_abstract,
+#             "l_n_INTJ": l_n_INTJ,
+#             "l_n_PROPN": l_n_PROPN,
+#             "l_n_NUM": l_n_NUM,
+#             "l_n_VERB": l_n_VERB,
+#             "l_n_NOUN": l_n_NOUN,
+#             "l_n_ADV": l_n_ADV,
+#             "l_n_ADJ": l_n_ADJ,
+#             "l_n_ADP": l_n_ADP,
+#             "l_n_PRON": l_n_PRON,
+#             "l_n_AUX": l_n_AUX,
+#             "l_n_DET": l_n_DET,
+#             "l_n_SCONJ": l_n_SCONJ,
+#             "l_n_PART": l_n_PART,
+#             "l_n_CCONJ": l_n_CCONJ,
+#             "l_n_X": l_n_X,
+#             "l_w_concrete": l_w_concrete,
+#             "l_w_abstract": l_w_abstract,
+#             "l_w_INTJ": l_w_INTJ,
+#             "l_w_PROPN": l_w_PROPN,
+#             "l_w_NUM": l_w_NUM,
+#             "l_w_VERB": l_w_VERB,
+#             "l_w_NOUN": l_w_NOUN,
+#             "l_w_ADV": l_w_ADV,
+#             "l_w_ADJ": l_w_ADJ,
+#             "l_w_ADP": l_w_ADP,
+#             "l_w_PRON": l_w_PRON,
+#             "l_w_AUX": l_w_AUX,
+#             "l_w_DET": l_w_DET,
+#             "l_w_SCONJ": l_w_SCONJ,
+#             "l_w_PART": l_w_PART,
+#             "l_w_CCONJ": l_w_CCONJ,
+#             "l_w_X": l_w_X,
+#         }
+#     ]
+# )
 
 #     "ADJ": "adjective",
 #     "ADP": "adposition",

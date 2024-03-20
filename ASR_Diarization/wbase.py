@@ -1,68 +1,77 @@
-import soundfile as sf
 import torch
-import resampy
 import time
-from transformers import WhisperProcessor, WhisperForConditionalGeneration, pipeline
+import soundfile as sf
+from transformers import pipeline
+from audio_utils import *
+from diarize import *
 
-# Load model and processor
-# device = "cuda:0" if torch.cuda.is_available() else "cpu"
-# print(device)
-#processor = WhisperProcessor.from_pretrained("openai/whisper-tiny")
-#model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-tiny").to(device)
-
-# model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language="english", task="transcribe")
-
-# pipe = pipeline(
-#   "automatic-speech-recognition",
-#   model="openai/whisper-large-v2",
-#   chunk_length_s=30,
-#   device=device,
-# )
+class ASRPipe:
+    def __init__(self, path, mod_name, device):
+        self.path = path
+        self.mod_name = mod_name
+        self.device = device
 
 
+    def run_pipe(self, split=True):
+        pipe = pipeline(
+            "automatic-speech-recognition",
+            model=self.mod_name,
+            device=self.device
+        )
+        if split:
+            mic1, mic2 = split_wav(self.path)  # One channel audio only for HF pipeline.
+            pred_mic1 = pipe(mic1, batch_size=20, return_timestamps=True, chunk_length_s=30, stride_length_s=(4, 4))
+            pred_mic2 = pipe(mic2, batch_size=20, return_timestamps=True, chunk_length_s=30, stride_length_s=(4, 4))
+            return list(pred_mic1["chunks"]) + list(pred_mic2["chunks"])
+        else:
+            aud, sr = sf.read(self.path)
+            audio =  aud.mean(axis=1)
+            pred = pipe(audio, batch_size=20, return_timestamps=True, chunk_length_s=30, stride_length_s=(4, 4))
+            return list(pred["chunks"])
 
-# pipe = pipeline(
-#   "automatic-speech-recognition",
-#   model="facebook/wav2vec2-base-960h",
-#   device=device,
-# )
 
-def conv_sr(audio_file_path, desired_sr=16000):
-    audio, sr = sf.read(audio_file_path) #sampling rate aligned with whisper
-    if sr != desired_sr:
-        return resampy.resample(audio.T, sr, desired_sr).T #transposing audio to (len, channels) to fit resampy
-    return audio.T
+    def diarize(self):
+        pred = self.run_pipe()
+        get_diarization(self.path)
 
+        # Produces a list of tags for each word
+    def store_output(self, pred, dur=None):
+        seg_list = sorted(pred, key = lambda x: x["timestamp"][0])
+        with open(f"{self.mod_name.split('/')[-1]}_{self.path.split('.')[0]}.txt", "w") as f:
+            if dur:  # This shows how long the model took to process the file, only for testing.
+                print(dur, file=f)
+            for chunk in seg_list:
+                print(chunk, file=f)
 
-def test_models(audio_file_path, mod_list, device):
+def test_models(audio_path, mod_list, device, record_model_time=True):
     #audio = conv_sr(audio_file_path)[:, 0]
-    audio = conv_sr(audio_file_path).mean(axis=1)  # One channel audio only for HF pipeline.
     for mod in mod_list:
         s = time.time()
-        pipe = pipeline(
-          "automatic-speech-recognition",
-          model=mod,
-          device=device
-        )
+        piper = ASRPipe(audio_path, mod, device)
         try:
-            pred = pipe(audio, batch_size=1, return_timestamps="word", chunk_length_s=20, stride_length_s=(4,2))["text"]
+            pred = piper.run_pipe()
         except torch.cuda.OutOfMemoryError:
             pred = "Not enough GPU memory"
         #TODO: test stride lengths
-        dur = time.time() - s
-        with open(f"{mod.split('/')[-1]}_{audio_file_path.split('.')[0]}.txt", "w") as f:
-            print("Duration:", str(dur), file=f)
-            print(pred,file=f)
+        if record_model_time:
+            dur = time.time() - s
+        else:
+            dur = None
+        piper.store_output(pred, dur)
 
 if __name__=="__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    assert torch.cuda.is_available(), "CUDA Required for this program"
+    dev = torch.device("cuda")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # aud_file="hmm.mp3"
-    aud_file = "10316_2.wav"
+    # aud_file = "10316_2.wav"
+    aud_file = "14063_2.wav"
 
     # models = ["facebook/wav2vec2-base-960h", "openai/whisper-large-v2", "openai/whisper-medium"]
-    models = ["facebook/wav2vec2-base-960h", "openai/whisper-medium", "openai/whisper-small", "openai/whisper-tiny", "openai/whisper-large"]
-
-    test_models(aud_file, models, device)
+    # models = ["facebook/wav2vec2-base-960h", "openai/whisper-medium", "openai/whisper-small"]
+    models = ["openai/whisper-tiny"]
+    #asr_pipe = ASRPipe(aud_file, mod_name)
+    test_models(aud_file, models, dev)
 # input_features = processor(audio, sampling_rate=desired_sr, return_tensors="pt").input_features.to(device)
 
 # # Generate token ids
