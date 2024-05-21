@@ -5,8 +5,6 @@
 
 
 import pandas as pd
-import numpy as np
-from allennlp_models import pretrained
 from somajo import SoMaJo
 from dialog_tag import DialogTag
 import torch
@@ -21,10 +19,6 @@ dep_parser = pretrained.load_predictor("structured-prediction-biaffine-parser")
 speechact_model = DialogTag("distilbert-base-uncased")
 model = BertModel.from_pretrained("bert-base-uncased", output_hidden_states=True)
 bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-
-
-# In[4]:
-
 
 def srl_coref_embed(text):
     # Sentence Tokenizer
@@ -193,7 +187,7 @@ def srl_coref_embed(text):
         """
         Obtains BERT embeddings for tokens, in context of the given response.
         """
-        # gradient calculation id disabled
+        # gradient calculation disabled
         with torch.no_grad():
             # obtain hidden states
             outputs = model(tokens_tensor, segments_tensor)
@@ -242,8 +236,8 @@ def srl_coref_embed(text):
         for each_token in bert_pred:
             token_index_bert_batch.at[n, "token_index"] = m
             token_index_bert_batch.at[n, "token"] = each_token
-            m = m + 1
-            n = n + 1
+            m += 1
+            n += 1
         tokenized_text, tokens_tensor, segments_tensors = bert_text_preparation(
             document, bert_tokenizer
         )
@@ -347,7 +341,7 @@ def srl_coref_embed(text):
 # In[5]:
 
 
-### Points to the folder that contains all data
+### Points to the folder that contains all raw
 root_data = "C://Users//ANikzad//Desktop//Local_Pipeline//Data//"
 
 ### Specify Source Folder
@@ -360,9 +354,6 @@ dicourse_feature_location_semgraph = (
     root_data
     + "Remora-2023//Batch-1//6_discourse_level_features//6b_graphs//6b2_semgraphs//raw_df//"
 )
-
-
-# In[6]:
 
 
 # get all the files in the transcripts folder (the folder should just include transcripts)
@@ -381,7 +372,7 @@ for aggregate in all_aggregate_files:
         # print(drive_aggregate_in_path+aggregate)
         df = pd.read_csv(word_level_location + aggregate)
         df["row_id"] = df.index
-        df = df.loc[df["is_unintelligable"] == 0].copy()
+        df = df.loc[df["is_unintelligible"] == 0].copy()
         df = df.loc[df["is_repetition"] == 0].copy()
         df = df.loc[df["is_partial"] == 0].copy()
         # df = df.loc[df['is_punctuation'] == 0].copy()
@@ -489,15 +480,3 @@ for aggregate in all_aggregate_files:
         final_df.to_excel(
             dicourse_feature_location_semgraph + aggregate.split(".")[0] + ".xlsx"
         )
-
-
-# In[9]:
-
-
-all_turns
-
-
-# In[8]:
-
-
-final_df

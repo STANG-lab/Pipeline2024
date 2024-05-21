@@ -9,11 +9,6 @@ import os
 import string
 import statistics
 import numpy as np
-
-
-# In[ ]:
-
-
 from allennlp_models import pretrained
 
 coref_labeler = pretrained.load_predictor("coref-spanbert")
@@ -22,7 +17,7 @@ coref_labeler = pretrained.load_predictor("coref-spanbert")
 # In[66]:
 
 
-### Points to the folder that contains all data
+### Points to the folder that contains all raw
 root_data = "C://Users//ANikzad//Desktop//Local_Pipeline//Data//"
 
 ### Specify Source Folder
@@ -61,7 +56,7 @@ for aggregate in all_aggregate_files:
         # print(drive_aggregate_in_path+aggregate)
         df = pd.read_csv(drive_aggregate_in_path + aggregate)
         df["row_id"] = df.index
-        df = df.loc[df["is_unintelligable"] == 0].copy()
+        df = df.loc[df["is_unintelligible"] == 0].copy()
         df = df.loc[df["is_repetition"] == 0].copy()
         df = df.loc[df["is_partial"] == 0].copy()
         # df = df.loc[df['is_punctuation'] == 0].copy()
@@ -374,31 +369,6 @@ for aggregate in all_aggregate_files:
 
 report_df.to_csv(root_data + feature_folder + "//6a_coref_features.csv")
 
-
-# In[99]:
-
-
-report_df
-
-
-# In[94]:
-
-
-df.head(10)
-
-
-# In[35]:
-
-
-df
-
-
-# In[ ]:
-
-
-# In[5]:
-
-
 for aggregate in all_aggregate_files[0:2]:
     print(aggregate)
     df = pd.read_csv(drive_discourselevel_coref_out_path + aggregate)
@@ -444,49 +414,6 @@ for aggregate in all_aggregate_files[0:2]:
 
     print("")
 
-
-# In[9]:
-
-
-cluster_df
-
-
-# In[23]:
-
-
-merged_tokens
-
-
-# In[37]:
-
-
-cluster_df
-
-
-# In[18]:
-
-
-clusters_dic
-
-
-# In[11]:
-
-
-clusters
-
-
-# In[ ]:
-
-
-# In[8]:
-
-
-df
-
-
-# In[115]:
-
-
 ### Embedding
 
 speakers = {"Subject": "Participant", "Interviewer": "Interviewer", "Other": "Other"}
@@ -496,7 +423,7 @@ for aggregate in all_aggregate_files[0:5]:
         # print(drive_aggregate_in_path+aggregate)
         df = pd.read_csv(drive_aggregate_in_path + aggregate)
         df["row_id"] = df.index
-        df = df.loc[df["is_unintelligable"] == 0].copy()
+        df = df.loc[df["is_unintelligible"] == 0].copy()
         df = df.loc[df["is_repetition"] == 0].copy()
         df = df.loc[df["is_partial"] == 0].copy()
         # df = df.loc[df['is_punctuation'] == 0].copy()
@@ -552,9 +479,3 @@ for aggregate in all_aggregate_files[0:5]:
             ]
         )
         turn_df = pd.DataFrame(all_turns, columns=["speaker", "turn_content"])
-
-
-# In[116]:
-
-
-turn_df

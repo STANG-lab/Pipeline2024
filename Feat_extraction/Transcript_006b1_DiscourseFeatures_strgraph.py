@@ -7,22 +7,17 @@
 import pandas as pd
 import random
 import os
-import string
-from spacy.lang.en import English
-
-nlp = English()
 import spacy
 
-nlp = spacy.load("en_core_web_sm")
 import networkx as nx
 from statistics import mean
 from statistics import stdev
 
 
-# In[4]:
+nlp = spacy.load("en_core_web_sm")
 
 
-### Points to the folder that contains all data
+### Points to the folder that contains all raw
 root_data = "C://Users//ANikzad//Desktop//Local_Pipeline//Data//"
 
 ### Specify Source Folder
@@ -312,34 +307,6 @@ df_strgfeatures.to_csv(
     root_data + "Remora-2023//Batch-1//features//6b1_sequential_graph_features.csv"
 )
 
-
-# In[ ]:
-
-
-len(node_sequence)
-
-
-# In[8]:
-
-
-df_strgfeatures
-
-
-# In[120]:
-
-
-dynamic_entry
-
-
-# In[84]:
-
-
-entry["g_sq_zlscc"]
-
-
-# In[50]:
-
-
 l2 = 0
 l3 = 0
 for node1 in nx.nodes(G_seq):
@@ -353,26 +320,11 @@ for node1 in nx.nodes(G_seq):
             if node1 in nx.neighbors(G_seq, node3):
                 if node1 != node2 and node2 != node3:
                     l3 += 1
-l3
 
 
-# In[23]:
-
-
-sorted(nx.simple_cycles(G_seq, length_bound=3))
-
-
-# In[12]:
-
-
-sorted(nx.simple_cycles(G_seq, length_bound=1))
-
-
-# In[30]:
-
-
-for each_item in nx.selfloop_edges(G_seq):
-    print(each_item)
-
-
-# In[ ]:
+# sorted(nx.simple_cycles(G_seq, length_bound=3))
+#
+# sorted(nx.simple_cycles(G_seq, length_bound=1))
+#
+# for each_item in nx.selfloop_edges(G_seq):
+#     print(each_item)

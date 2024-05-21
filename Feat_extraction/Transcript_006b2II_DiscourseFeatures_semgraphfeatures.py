@@ -26,7 +26,7 @@ nlp = spacy.load("en_core_web_sm")
 # In[3]:
 
 
-### Points to the folder that contains all data
+### Points to the folder that contains all raw
 root_data = "C://Users//ANikzad//Desktop//Local_Pipeline//Data//"
 
 ### Specify Source Folder
