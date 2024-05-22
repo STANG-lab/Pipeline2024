@@ -6,6 +6,7 @@ import numpy as np
 from collections import defaultdict, Counter
 from pathlib import Path
 import nltk
+# nltk.download("stopwords")
 from nltk.corpus import stopwords
 from dict_utils import *
 
@@ -443,7 +444,9 @@ def get_word_feats(word_feature_csv_path, text_target, word_feat_folder, word_ag
         l_n_dict["words"] = l_n_words
         l_n_dict = {f"l_n_{key}": l_n_dict[key] for key in l_n_dict.keys()}
 
-        each_report = pd.DataFrame(l_n_dict | l_w_dict | l_me_dic | l_md_dic | l_mx_dic, index=[0])
+        # each_report = pd.DataFrame(l_n_dict | l_w_dict | l_me_dic | l_md_dic | l_mx_dic, index=[0])
+        each_report = pd.DataFrame({**l_n_dict, **l_w_dict, **l_me_dic, **l_md_dic, **l_mx_dic}, index=[0])
+
         # TODO: Make this better, dict union is slow
 
         reports.append(each_report)

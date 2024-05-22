@@ -20,12 +20,12 @@ if __name__ == "__main__":
     parser.add_argument('--take_denoised', help="Use denoised data for further acoustic processing. Performs SNR.", default=False)
 
     # Alex features, note that acoustic features require completed transcripts, as well as time and snr.
-    parser.add_argument('--snr', help="Measure SNR and record features", default=False)
-    parser.add_argument('--time', help="Get timing, turn, and other assorted SAD features", default=False)
-    parser.add_argument('--acoustics', help="Get acoustic features with SMILE (Requires transcripts)", default=False)
+    parser.add_argument('--snr', help="Measure SNR and record features", default=True)
+    parser.add_argument('--time', help="Get timing, turn, and other assorted SAD features", default=True)
+    parser.add_argument('--acoustics', help="Get acoustic features with SMILE (Requires transcripts)", default=True)
 
     # Preprocessing commands
-    parser.add_argument('--asr', help="Process files with ASR", default=True)
+    parser.add_argument('--asr', help="Process files with ASR", default=False)
     parser.add_argument('--override_asr', help="Redo all transcriptions for study", default=False)  # This should usually stay False.
     parser.add_argument('--phi-flag', help="PHI flag data", default=False)
     parser.add_argument('--word_agg', help="Generate word aggregates from data (3)", default=False)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     parser.add_argument('--word_features', help="Generate lexical features (4)", default=False)
 
     # TODO: Encapsulate these in Allen NLP environment
-    parser.add_argument('--sentence_features', help="Generate sentence features", default=False)
+    parser.add_argument('--sentence_features', help="Generate sentence features", default=True)
     parser.add_argument('--coref', help="Generate coreference discourse features", default=False)
     parser.add_argument('--semgraph', help="Generate semantic graph features", default=False)
 
@@ -132,9 +132,9 @@ if __name__ == "__main__":
         get_time_features(target_audios, text_feature_target, out_dirs)
 
     # # TODO: ISOLATE THESE WITH ASSERT STATEMENT
-    # if args.sentence_features:  # install allennlp and DialogTag
-    #     from Transcript_005_SentenceFeatures import get_sent_feats
-    #     get_sent_feats(out_dirs)
+    if args.sentence_features:  # install allennlp and DialogTag
+        from Transcript_005_SentenceFeatures import get_sent_feats
+        get_sent_feats(out_dirs)
 
 
 

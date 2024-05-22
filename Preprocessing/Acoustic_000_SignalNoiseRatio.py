@@ -77,15 +77,17 @@ class SNRMeasurer:
         # Generate SNRs and nclipped for each file and save in pandas df
         # This first is used to identify whether noise reduction should be performed.
         # Then, it is used on the files that are denoised to obtain the final values.
-        df_list = []
+        df_list = [pd.DataFrame(columns=columns)]
         files = (p.resolve() for p in Path(path_to_audios).glob("**/*") if p.suffix in {".mp4", ".wav", ".mp3", ".m4a"})
         for each_recording in files:
+            print(each_recording)
             each_entry = [each_recording]
             snr_tupple = run_SpeechQuality(each_recording)
             each_entry.append(snr_tupple[0])
             each_entry.append(snr_tupple[1])
             each_entry = pd.DataFrame([each_entry], columns=columns)
             df_list.append(each_entry)
+        print(df_list)
         df_snr = pd.concat(df_list, ignore_index=True)
         if self.interim_csvs:
             df_snr.to_csv(self.denoised_path / name, index=False)

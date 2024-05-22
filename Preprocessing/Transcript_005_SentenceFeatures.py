@@ -3,8 +3,6 @@
 
 import pandas as pd
 import numpy as np
-# import os
-# import string
 from dialog_tag import DialogTag
 import ast
 from allennlp_models import pretrained
@@ -61,6 +59,10 @@ def set_paths(outdirs):
 def get_sent_csvs(outdirs):
     word_agg, sent_feat_dir, feat_dir = set_paths(outdirs)
     all_aggregate_files = word_agg.glob("*")
+    speechact_model = DialogTag("distilbert-base-uncased")
+    dep_parser = pretrained.load_predictor("structured-prediction-biaffine-parser")
+    srl_labeler = pretrained.load_predictor("structured-prediction-srl-bert")
+
     for aggregate in all_aggregate_files:
         # if aggregate.split("_")[5] in ["SOC", "PIC", "JOU", "BTW"]:
         # print(aggregate.split('_')[5])
@@ -111,14 +113,12 @@ def get_sent_csvs(outdirs):
                 .replace("#", "")
                 .replace("  ", " ")
             )
-            speechact_model = DialogTag("distilbert-base-uncased")
-            srl_labeler = pretrained.load_predictor("structured-prediction-srl-bert")
-            dep_parser = pretrained.load_predictor("structured-prediction-biaffine-parser")
 
             dualog_tag = speechact_model.predict_tag(sent)
             # do the POS tagging
             speaker = l["speaker"].unique()[0]
             sent_parse = dep_parser.predict(sent)
+
             sent_srl = srl_labeler.predict(sentence=sent)
             assert len(sent_parse["words"]) == len(sent_srl["words"])
 
@@ -132,7 +132,7 @@ def get_sent_csvs(outdirs):
                 srl_tag = srl_tag
 
                 element_df = pd.DataFrame()
-                element_df.at[0, "uid"] = aggregate.split(".")[0]
+                element_df.at[0, "uid"] = aggregate.name.split(".")[0]
                 element_df.at[0, "speaker"] = speaker
                 element_df.at[0, "sentence_id"] = sentence_id
                 element_df.at[0, "token_id"] = token_id
@@ -143,9 +143,7 @@ def get_sent_csvs(outdirs):
                 element_df.at[0, "srl_list"] = str(srl_tag)
 
                 sent_df = pd.concat([sent_df, element_df], ignore_index=True)
-
                 token_id += 1
-
             sentence_id += 1
         sent_df.to_csv(sent_feat_dir / aggregate.name)
         # current_speaker = sent_df.at[0, "speaker"]
@@ -231,7 +229,7 @@ def get_agg_sent_feats(outdirs):
 
     for aggregate in all_aggregate_files:
         df = pd.read_csv(aggregate)
-        filename = aggregate.split(".")[0]
+        filename = aggregate.name.split(".")[0]
         df = df.loc[df["speaker"] == "Subject"].copy()
         df = df.loc[df["dep.pos"] != "PUNCT"].copy()
 
