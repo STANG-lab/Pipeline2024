@@ -115,9 +115,13 @@ def get_sent_csvs(outdirs):
             )
 
             dualog_tag = speechact_model.predict_tag(sent)
+            
             # do the POS tagging
             speaker = l["speaker"].unique()[0]
+            
             sent_parse = dep_parser.predict(sent)
+
+
 
             sent_srl = srl_labeler.predict(sentence=sent)
             assert len(sent_parse["words"]) == len(sent_srl["words"])
