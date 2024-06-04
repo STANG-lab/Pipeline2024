@@ -18,6 +18,9 @@ class FolderStructure:
                       "Features/sentence_features",
                       "Features/word_aggregates",
                       "Features/4_word_features",
+                      "Features/5_sentence_features",
+                      "Features/6_discourse_features",
+                      "Features/6_discourse_features/6b_struct_graphs",
                       "SAD",
                       "SAD/prelab",
                       "SAD/postlab",
@@ -54,12 +57,18 @@ class FolderStructure:
             fnames.append("ASRoutput")
             fnames.append("ASRoutput/raw")
             fnames.append("ASRoutput/clean")
-        if args.snr or args.UD or args.take_denoised:  # ADD FEATURES HERE TO CREATE DIRS FOR THEM AUTOMATICALLY
+        if args.snr or args.UD or args.take_denoised or args.coref or args.seq_graph:  # ADD FEATURES HERE TO CREATE DIRS FOR THEM AUTOMATICALLY
             fnames.append("Features")
         if args.word_agg:
             fnames.append("Features/word_aggregates")
         if args.sentence_features:
-            fnames.append("Features/sentence_features")
+            fnames.append("Features/5_sentence_features")
+        if args.coref or args.seq_graph:
+            fnames.append("Features/6_discourse_features/")
+        if args.coref:
+            fnames.append("Features/6_discourse_features/6a_coreferences/")
+        if args.seq_graph:
+            fnames.append("Features/6_discourse_features/6b_struct_graphs/")
         # if args.prep_annotations:
         #     fnames.append("SplitTranscripts")
         if args.time:
