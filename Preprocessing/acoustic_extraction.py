@@ -6,9 +6,8 @@
 
 import os.path
 import csv
-import pandas as pd
 import subprocess
-from pathlib import Path
+from abstract_featurizer import Featurizer
 
 
 # Update audio_path and output_path to desired preferences
@@ -18,25 +17,25 @@ from pathlib import Path
 # In[18]:
 
 
-smile_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/bin/SMILExtract'
-#config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/is09-13/IS13_ComParE.conf'
-config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/myIS13_ComParE_8K.conf'
-#config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/demo/demo1_energy.conf'
-
-output_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/openSMILE_output"
-log_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/log_files"
-#output_path="/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_std_spellchecked_batch_1+2/"
-# Path(output_path).mkdir(parents=True, exist_ok=True)
-# Path(log_path).mkdir(parents=True, exist_ok=True)
-
-audio_df_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/snr_out/rem_batch1_snr_final.csv"
-
-audio_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task'
-denoised_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task/denoised"
-
-audio_files = [f for f in os.listdir(audio_path) if os.path.isfile(os.path.join(audio_path, f)) and not f.startswith('.')] # infs hidden files and ignores folders
-denoised_files = [f for f in os.listdir(denoised_path) if os.path.isfile(os.path.join(denoised_path, f)) and not f.startswith('.')] # infs hidden files and ignores folders
-audio_df = pd.read_csv(audio_df_path)
+# smile_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/bin/SMILExtract'
+# #config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/is09-13/IS13_ComParE.conf'
+# config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/myIS13_ComParE_8K.conf'
+# #config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/demo/demo1_energy.conf'
+#
+# output_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/openSMILE_output"
+# log_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/log_files"
+# #output_path="/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_std_spellchecked_batch_1+2/"
+# # Path(output_path).mkdir(parents=True, exist_ok=True)
+# # Path(log_path).mkdir(parents=True, exist_ok=True)
+#
+# audio_df_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/snr_out/rem_batch1_snr_final.csv" # This should stay here
+#
+# audio_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task'
+# denoised_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task/denoised"
+#
+# audio_files = [f for f in os.listdir(audio_path) if os.path.isfile(os.path.join(audio_path, f)) and not f.startswith('.')] # infs hidden files and ignores folders
+# denoised_files = [f for f in os.listdir(denoised_path) if os.path.isfile(os.path.join(denoised_path, f)) and not f.startswith('.')] # infs hidden files and ignores folders
+# audio_df = pd.read_csv(audio_df_path)
 
 
 
@@ -79,50 +78,25 @@ audio_df = pd.read_csv(audio_df_path)
 
 # In[21]:
 
-class AcousticExtractor:
+class AcousticFeaturizer(Featurizer):
     def __init__(self, outdirs, aud_target, smile_path, config_path, smile_log_out=True):
-        # SMILE SPECIFIC CONFIG
-        self.smile_command = smile_path
-        self.config_path = config_path
-        # smile_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/bin/SMILExtract'
-        # config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/is09-13/IS13_ComParE.conf'
-        # config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/myIS13_ComParE_8K.conf'
-        # config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/demo/demo1_energy.conf'
-
-
-
-        self.log_path = outdirs['openSMILE/logs']
-        # log_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/log_files"
-
-
-        # output_path="/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_std_spellchecked_batch_1+2/"
-        # Path(output_path).mkdir(parents=True, exist_ok=True)
-        # Path(log_path).mkdir(parents=True, exist_ok=True)
-
-        self.audio_df_path = outdirs["Features"] / "snr_final.csv"
-        # audio_df_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/snr_out/rem_batch1_snr_final.csv"
-
+        super().__init__(self, outdirs)
         self.audio_path = aud_target
         # Alex's original code distinguishes two sources, denoised and raw files.
         # Instead, we analyze whichever is our audio target.
 
-        # audio_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task'
+        # SMILE SPECIFIC CONFIG
+        self.smile_command = smile_path
+        self.config_path = config_path
 
-        # denoised_path = outdirs["Raw/denoised"]
-        # denoised_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task/denoised"
+        #Processing
+        self.smile_on_files()
+        self.process_smiles()
 
-        self.lab_files_path = outdirs["SAD/postlab"]
-        # lab_files_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/sad_out/test/post_labs"
-
-        # The folders below are populated by this object, as opposed to the previous which are pre-supposed.
-        self.smile_output_path = outdirs["openSMILE/Output"]
-        # output_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/openSMILE_output"
-        self.smile_labeled_path = outdirs["openSMILE/LabOutput"]
-        # output_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/openSMILE_output_labeled"
 
 
     def smile_on_files(self):
-        # Calls acoustic extractor itself.
+        # Calls acoustic extractor.
         sub_results = []
 
         for file in self.audio_path.glob("*"):
@@ -140,7 +114,7 @@ class AcousticExtractor:
         #               os.path.isfile(os.path.join(smile_files_path, f)) and not f.startswith(
         #                   '.')]  # infs hidden files and ignores folders
 
-        pre_smiles = self.smile_output_path.glob("*.csv")
+        pre_smiles = self.smile_out.glob("*.csv")
         # print("Total # openSMILE files:")
         # print(len(pre_smiles))
 
@@ -154,10 +128,11 @@ class AcousticExtractor:
             # continue
 
             # Read corresponding Lab file into list
-            smile_path = os.path.join(smile_files_path, smile_name)
-            # TODO: Change this logic.
-            lab_name = smile_name.split('.')[0] + "_LABELED.lab"
-            lab_path = os.path.join(lab_files_path, lab_name)
+            smile_path = self.smile_out / smile_name.name
+            # smile_path = os.path.join(smile_files_path, smile_name)
+            lab_name = smile_name.name.split('.')[0] + "_LABELED.lab"
+            # lab_path = os.path.join(lab_files_path, lab_name)
+            lab_path = self.sad_postlab / lab_name
 
             with open(smile_path, newline='') as f:
                 reader = csv.reader(f, delimiter=";")
@@ -168,7 +143,6 @@ class AcousticExtractor:
                 # lab = list(reader)
 
             # Create header for labeled smile file
-            i = 0
             header = list()
             for label in smile[0]:
                 # Insert speaker and speech-type after frameTime
@@ -202,48 +176,44 @@ class AcousticExtractor:
                     new_row.append(type)
                     for feature in row[2:]:
                         new_row.append(feature)
-
                     post_smile.append(new_row)
-
                     i += 1
 
             # Save post_smile file
-            lab_smile_name = smile_name + '_LABELED.csv'
-            self.smile_labeled_path / lab_smile_name
-            path = os.path.join(output_path, smile_name + '_LABELED.csv')
-            with open(path, 'w', newline='') as f:
+            lab_smile_name = smile_name.name.split(".")[0] + '_LABELED.csv'
+            # path = os.path.join(output_path, smile_name + '_LABELED.csv')
+            with open(self.smile_labeled_out / lab_smile_name, 'w', newline='') as f:
                 writer = csv.writer(f, delimiter=';')
                 writer.writerows(post_smile)
-
         print("DONE!")
 
 
-def log_results_info(sub_results, log_name):
-    log_name = os.path.join(log_path,  'log.txt')
-    with open(log_name, 'w', newline='') as f:
-        for result in sub_results:
-            print("\nCommand:")
-            print(result.args)
-            print("Stdout:")
-            print(result.stdout)
-            print("Stderr:")
-            print(result.stderr)
-            f.write("\nCommand: ")
-            f.write(f"{result.args}\n")
-            f.write("Stdout:\n")
-            f.write(f"{result.stdout}\n")
-            f.write("Stderr:\n")
-            f.write(f"{result.stderr}\n")
-
-        print("\n\nExpected # Files CSVs Generated:")
-        f.write("\n\nExpected # Files CSVs Generated: ")
-        print(len(all_files))
-        f.write(f"{len(all_files)}\n")
-        print("# of Files Created")
-        f.write("# of Files Created: ")
-        all_output_files = [f for f in os.listdir(output_path) if os.path.isfile(os.path.join(output_path, f)) and not f.startswith('.')] # infs hidden files and ignores folders
-        print(len(all_output_files))
-        f.write(f"{len(all_output_files)}")
+# def log_results_info(sub_results, log_name):
+#     log_name = os.path.join(log_path,  'log.txt')
+#     with open(log_name, 'w', newline='') as f:
+#         for result in sub_results:
+#             print("\nCommand:")
+#             print(result.args)
+#             print("Stdout:")
+#             print(result.stdout)
+#             print("Stderr:")
+#             print(result.stderr)
+#             f.write("\nCommand: ")
+#             f.write(f"{result.args}\n")
+#             f.write("Stdout:\n")
+#             f.write(f"{result.stdout}\n")
+#             f.write("Stderr:\n")
+#             f.write(f"{result.stderr}\n")
+#
+#         print("\n\nExpected # Files CSVs Generated:")
+#         f.write("\n\nExpected # Files CSVs Generated: ")
+#         print(len(all_files))
+#         f.write(f"{len(all_files)}\n")
+#         print("# of Files Created")
+#         f.write("# of Files Created: ")
+#         all_output_files = [f for f in os.listdir(output_path) if os.path.isfile(os.path.join(output_path, f)) and not f.startswith('.')] # infs hidden files and ignores folders
+#         print(len(all_output_files))
+#         f.write(f"{len(all_output_files)}")
 
 
 # Label openSMILE output using lab files
@@ -265,6 +235,41 @@ def log_results_info(sub_results, log_name):
 
 # In[14]:
 
+        # # smile_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/bin/SMILExtract'
+        # # config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/is09-13/IS13_ComParE.conf'
+        # # config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/myIS13_ComParE_8K.conf'
+        # # config_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/opensmile-3.0.1-macos-x64/config/demo/demo1_energy.conf'
+        #
+        #
+        #
+        # self.smile_logs = outdirs['openSMILE/logs']
+        # # log_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/log_files"
+        #
+        #
+        # # output_path="/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_std_spellchecked_batch_1+2/"
+        # # Path(output_path).mkdir(parents=True, exist_ok=True)
+        # # Path(log_path).mkdir(parents=True, exist_ok=True)
+        #
+        # self.audio_df_path = outdirs["Features"] / "snr_final.csv"
+        # # audio_df_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/snr_out/rem_batch1_snr_final.csv"
+        #
+        # self.audio_path = aud_target
+        # # Alex's original code distinguishes two sources, denoised and raw files.
+        # # Instead, we analyze whichever is our audio target.
+        #
+        # # audio_path = '/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task'
+        #
+        # # denoised_path = outdirs["Raw/denoised"]
+        # # denoised_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/data/remora_test/audio_by_task/denoised"
+        #
+        # # self.lab_files_path = outdirs["SAD/postlab"]
+        # # lab_files_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/sad_out/test/post_labs"
+        #
+        # # The folders below are populated by this object, as opposed to the previous which are pre-supposed.
+        # self.smile_output_path = outdirs["openSMILE/Output"]
+        # # output_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/openSMILE_output"
+        # self.smile_labeled_path = outdirs["openSMILE/LabOutput"]
+        # # output_path = "/Volumes/Alex_R_Music_ssD/Research/ac_pipe/output/smile_out/remora_test/openSMILE_output_labeled"
 
 
 

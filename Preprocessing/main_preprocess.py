@@ -20,24 +20,25 @@ if __name__ == "__main__":
     parser.add_argument('--take_denoised', help="Use denoised data for further acoustic processing. Performs SNR.", default=False)
 
     # Alex features, note that acoustic features require completed transcripts, as well as time and snr.
-    parser.add_argument('--snr', help="Measure SNR and record features", default=True)
-    parser.add_argument('--time', help="Get timing, turn, and other assorted SAD features", default=True)
-    parser.add_argument('--acoustics', help="Get acoustic features with SMILE (Requires transcripts)", default=True)
+    parser.add_argument('--snr', help="Measure SNR and record features", default=False)
+    parser.add_argument('--time', help="Get timing, turn, and other assorted SAD features", default=False)
+    parser.add_argument('--acoustics', help="Get acoustic features with SMILE (Requires transcripts)", default=False)
 
     # Preprocessing commands
     parser.add_argument('--asr', help="Process files with ASR", default=False)
-    parser.add_argument('--override_asr', help="Redo all transcriptions for study", default=False)  # This should usually stay False.
+    parser.add_argument('--override_asr', help="Redo all transcriptions", default=False)  # This should usually stay False.
     parser.add_argument('--phi-flag', help="PHI flag data", default=False)
-    parser.add_argument('--word_agg', help="Generate word aggregates from data (3)", default=False)
+    parser.add_argument('--word_agg', help="Generate word aggregates from data (3)", default=True)
 
     # Feature generation commands.
     parser.add_argument('--UD', help="Generate UD features", default=False)
-    parser.add_argument('--word_features', help="Generate lexical features (4)", default=False)
+    parser.add_argument('--word_features', help="Generate lexical features (4)", default=True)
 
     # TODO: Encapsulate these in Allen NLP environment
-    parser.add_argument('--sentence_features', help="Generate sentence features", default=True)
+    parser.add_argument('--sentence_features', help="Generate sentence features", default=False)
     parser.add_argument('--coref', help="Generate coreference discourse features", default=False)
-    parser.add_argument('--semgraph', help="Generate semantic graph features", default=False)
+    parser.add_argument('--seq_graph', help="Generate sequential graph features", default=False)
+
 
     args = parser.parse_args()
 
@@ -96,7 +97,7 @@ if __name__ == "__main__":
                             "--highlight_words", "False",
                             "--language", "en",
                             "--diarize",
-                            "--hf_token", "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"])
+                            "--hf_token", ""])
             subprocess.run(f"mv *.srt {out_dirs['ASRoutput/raw']}/", shell=True)
             # Make sure to add / after out_dirs[...] when using mv in subprocess.
 
@@ -120,21 +121,27 @@ if __name__ == "__main__":
     if args.UD:
         from UDFeatures import UD_featurize_study
         UD_featurize_study(text_feature_target, out_dirs["Features"] / "UDFeatures.tsv")
-    word_agg = args.word_agg or args.word_features
-    if word_agg:
-        from Transcript_003_WordAggregates import get_word_aggregates
+    if args.word_agg:
+        from WordAggregates_03 import get_word_aggregates
         get_word_aggregates(text_feature_target, out_dirs["Features"], out_dirs["Features/word_aggregates"], name="3_wordaggregates.csv")
     if args.word_features:
-        from Transcript_004_WordFeatures import get_word_features
-        get_word_features(out_dirs, text_feature_target)
+        from WordFeatures_04 import WordFeaturizer
+        # get_word_features(out_dirs, text_feature_target)
+        WordFeaturizer(out_dirs, word_level_csv="4_word_features.csv")
     if args.time:
-        from time_extraction import get_time_features
-        get_time_features(target_audios, text_feature_target, out_dirs)
+        from time_extraction import TimeFeaturizer
+        TimeFeaturizer(out_dirs, target_audios, text_feature_target)
 
     # # TODO: ISOLATE THESE WITH ASSERT STATEMENT
     if args.sentence_features:  # install allennlp and DialogTag
-        from Transcript_005_SentenceFeatures import get_sent_feats
-        get_sent_feats(out_dirs)
+        from UtteranceFeatures_05 import UtteranceFeaturizer
+        UtteranceFeaturizer(out_dirs)
+    if args.coref:
+        from DiscourseFeaturesCoref_06a import CorefFeaturizer
+        CorefFeaturizer(out_dirs)
+    if args.seq_graph:
+        from DiscourseFeaturesStrGraph_06b1 import StructFeaturizer
+        StructFeaturizer(out_dirs)  # StructFeaturizer object handles running the script and saving files.
 
 
 

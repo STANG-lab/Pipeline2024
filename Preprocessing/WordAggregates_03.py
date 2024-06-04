@@ -9,30 +9,29 @@
 # output:  csv word-level files
 
 # import libraries
-import numpy as np
 import pandas as pd
-from pathlib import Path
 
 
-# a to string method to pretty print
-def __str__(self):
-
-  s = "\"" + str(self.word) + "\" " + "[" + str(self.uid) + ":" + str(self.speaker)
-  s = s + "]"
-  s = s + "(n=" + str(self.n_words)
-  s = s if self.is_partial == 0 else s + " partial"
-  s = s if self.is_repetition == 0 else s + " rep."
-  s = s if self.is_neologism == 0 else s + " neolog."
-  s = s if self.is_unintelligible == 0 else s + " unintell."
-  s = s if self.is_noise == 0 else s + " noise"
-  s = s if self.is_punctuation == 0 else s + " punct."
-  s = s if self.is_phi == 0 else s + " identi."
-  s = s + ")"
-  return s
-
-
-# In[37]:
-
+def get_word_aggregates(in_dir, out_dir, agg_files, name="3_wordaggregates.csv"):
+    # In dir is PHI flagged data
+    # Out dir is Features of the study, but it can be set
+    out_path = out_dir / name
+    report_df = pd.DataFrame(columns=['filename', 'w_n_words', 'w_s_words','w_n_utterance',
+                                    'w_n_unintelligible','w_w_unintelligible', 'w_n_repetition', 'w_w_repetition',
+                                    'w_n_partial', 'w_w_partial', 'w_n_comma','w_s_comma','w_n_period','w_s_period',
+                                    'w_n_exclamation', 'w_s_exclamation','w_n_question','w_s_question',
+                                    'w_n_phi', 'w_w_phi', 'w_n_neologism','w_w_neologism', 'w_n_noise','w_w_noise',
+                                    'w_n_laugh','w_w_laugh', 'w_n_filledpause', 'w_w_filledpause', 'w_n_uh','w_w_uh','w_n_um','w_w_um', 'w_n_er','w_w_er',
+                                    'w_n_restart','w_s_restart', 'w_n_dysfluent', 'w_w_dysfluent'])
+    reports = [report_df]
+    for transcript in in_dir.glob("*"):
+        final_token_df = extract_token_df(transcript)  # Tokenized dataframe, features for each token,
+        # final_token_df.to_csv(drive_out_path+transcript.split('.')[0]+'.csv')
+        filename = transcript.name.split('.')[0]
+        reports.append(get_report(filename, final_token_df))
+        final_token_df.to_csv(agg_files / (filename + ".csv"))
+    report_df = pd.concat(reports, ignore_index=True)
+    report_df.to_csv(out_path)
 
 # this class stores all the attributes that a transcript token (i.e., a unit separated by spaces (most of the time a word) or punctuation) 
 # this class does use 0 for false and 1 for true to make it easier later to count (i.e., by summing)
@@ -107,6 +106,22 @@ class TranscriptToken:
               "is_filledpause": self.is_filledpause
           }
     return token_dict
+
+  def __str__(self):
+      # a to string method to pretty print
+      s = "\"" + str(self.word) + "\" " + "[" + str(self.uid) + ":" + str(self.speaker)
+      s = s + "]"
+      s = s + "(n=" + str(self.n_words)
+      s = s if self.is_partial == 0 else s + " partial"
+      s = s if self.is_repetition == 0 else s + " rep."
+      s = s if self.is_neologism == 0 else s + " neolog."
+      s = s if self.is_unintelligible == 0 else s + " unintell."
+      s = s if self.is_noise == 0 else s + " noise"
+      s = s if self.is_punctuation == 0 else s + " punct."
+      s = s if self.is_phi == 0 else s + " identi."
+      s = s + ")"
+      return s
+
 
 #%pip install ply
 import ply.lex as lex
@@ -431,26 +446,6 @@ def get_report(filename, final_token_df):
     return pd.DataFrame(rep, index=[0])
 
 
-def get_word_aggregates(in_dir, out_dir, agg_files, name="3_wordaggregates.csv"):
-    # In dir is PHI flagged data
-    # Out dir is Features of the study, but it can be set
-    out_path = out_dir / name
-    report_df = pd.DataFrame(columns=['filename', 'w_n_words', 'w_s_words','w_n_utterance',
-                                    'w_n_unintelligible','w_w_unintelligible', 'w_n_repetition', 'w_w_repetition',
-                                    'w_n_partial', 'w_w_partial', 'w_n_comma','w_s_comma','w_n_period','w_s_period',
-                                    'w_n_exclamation', 'w_s_exclamation','w_n_question','w_s_question',
-                                    'w_n_phi', 'w_w_phi', 'w_n_neologism','w_w_neologism', 'w_n_noise','w_w_noise',
-                                    'w_n_laugh','w_w_laugh', 'w_n_filledpause', 'w_w_filledpause', 'w_n_uh','w_w_uh','w_n_um','w_w_um', 'w_n_er','w_w_er',
-                                    'w_n_restart','w_s_restart', 'w_n_dysfluent', 'w_w_dysfluent'])
-    reports = [report_df]
-    for transcript in in_dir.glob("*"):
-        final_token_df = extract_token_df(transcript)  # Tokenized dataframe, features for each token,
-        # final_token_df.to_csv(drive_out_path+transcript.split('.')[0]+'.csv')
-        filename = transcript.name.split('.')[0]
-        reports.append(get_report(filename, final_token_df))
-        final_token_df.to_csv(agg_files / (filename + ".csv"))
-    report_df = pd.concat(reports, ignore_index=True)
-    report_df.to_csv(out_path)
 # each_report = pd.DataFrame([{'filename':transcript.split('.')[0], 'w_n_words':w_n_words,'w_s_words': w_s_words, 'w_n_utterance': w_n_utterance,
 # 'w_n_unintelligible': w_n_unintelligible, 'w_w_unintelligible':w_w_unintelligible, 'w_n_repetition': w_n_repetition,'w_w_repetition':w_w_repetition ,
 # 'w_n_partial': w_n_partial, 'w_w_partial':w_w_partial,
