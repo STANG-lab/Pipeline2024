@@ -64,7 +64,7 @@ def unique_names(labs):
 
 # Determines if speaker is known label
 def is_unknown_speaker(speaker):
-    speaker = speaker.lower().strip()
+    speaker = speaker.lower().strip().strip(":")  # TODO: REMOVE
     valid_speakers = {"interviewer", "subject", "interviewer+subject", "subject+interviewer", "other", "SPEAKER_00",
                       "SPEAKER_01"}
     if speaker in valid_speakers:
@@ -102,8 +102,8 @@ class TimeFeaturizer(Featurizer):
     def run_SAD(self):
         # SAD run on WAV files
         # TODO: MAKE THIS WORK WITH MORE FILETYPES
-
-        list_of_audio = glob.glob(self.audio_path + '/*.wav')
+        # list_of_audio = glob.glob(self.audio_path + '/*.wav')
+        list_of_audio = list(self.audio_path.glob("*"))
         # list_of_trans = glob.glob(self.text_path + '/*.txt')
 
         # print(len(list_of_audio), " audio files.")
@@ -246,7 +246,7 @@ class TimeFeaturizer(Featurizer):
             print(file)
         print("DONE!")
 
-        log_name = self.sad_logs + '/' + 'log.tsv'
+        log_name = self.sad_logs / 'log.tsv'
         with open(log_name, 'w', newline='') as f:
             f.write("Files Not Found:\n")
             for line in list_of_error:
@@ -296,8 +296,8 @@ class TimeFeaturizer(Featurizer):
         # print(len(list_of_lab_files), " pre-processed lab files.")
 
         for lab_path in list_of_lab_files:
-            lab_name = lab_path.split('/')[-1].split('.lab')[0]
-            trans_path = self.text_path + '/' + lab_name + '.txt'
+            lab_name = lab_path.name.split('/')[-1].split('.lab')[0]
+            trans_path = self.text_path /  (lab_name + '.txt')
             print("Processing ", lab_path)
 
             # check if the trans file in the list of transfiles with old names
@@ -313,29 +313,29 @@ class TimeFeaturizer(Featurizer):
 
                 # Gather all megasegments
                 list_mega = list()
-                start_time = float(list_tran[0][2])
+                start_time = float(list_tran[0][1])
                 offset = start_time  # Used to account for transcript timestamps not starting at 0
-                end_time = float(list_tran[0][3])
-                last_speaker = list_tran[0][1]
+                end_time = float(list_tran[0][2])
+                last_speaker = list_tran[0][3]
                 list_len = len(list_tran)
                 i = 0
                 for row in list_tran:
                     i += 1
                     #Remove white space and assign timestamps as float
-                    row[2] = float(row[2])
-                    row[3] = float(row[3])
+                    s = row[1] = float(row[1])
+                    e = row[2] = float(row[2])
                     row[0] = str(row[0]).strip()
-                    row[1] = str(row[1]).strip()
+                    row[3] = str(row[3]).strip()
 
                     # Log any files with speakers other than "Interviewer" or "Subject" or "Patient"
-                    if is_unknown_speaker(row[1].lower()):
-                        print("Non-interviewer/subject label '", row[1], "' on line ", i, " found in file: ", trans_path.split('/')[-1])
-                        list_of_extra_speakers.append([trans_path.split('/')[-1], str(row[1]), str(i)])
+                    if is_unknown_speaker(row[3].lower()):
+                        print("Non-interviewer/subject label '", row[1], "' on line ", i, " found in file: ", trans_path.name.split('/')[-1])
+                        list_of_extra_speakers.append([trans_path.name.split('/')[-1], str(row[1]), str(i)])
 
 
                     # If same speaker, update new end timestamp
-                    if row[1] == last_speaker:
-                        end_time = row[3]
+                    if row[3] == last_speaker:
+                        end_time = row[2]
 
 
                     # If different speaker, process lab file correlating to current megasegment, determine if OVERLAP present
@@ -347,46 +347,46 @@ class TimeFeaturizer(Featurizer):
                             list_mega.append(mega_entry)
 
                             # Update values for new megasegment
-                            start_time = float(row[2])
-                            end_time = float(row[3])
-                            last_speaker = row[1]
+                            start_time = float(row[1])
+                            end_time = float(row[2])
+                            last_speaker = row[3]
 
 
                         else: #OVERLAP
                             # Log any files with overlapping speakers
-                            print("OVERLAPPING speakers on line ", i, " found in file: ", trans_path.split('/')[-1])
-                            list_of_overlaps.append([trans_path.split('/')[-1], i])
+                            print("OVERLAPPING speakers on line ", i, " found in file: ", trans_path.name.split('/')[-1])
+                            list_of_overlaps.append([trans_path.name.split('/')[-1], i])
 
 
                             # If speaker 2's overlap is contained within speaker 1's speech create megasegment for Speaker 1
                             # and start a new megasegment with the overlap
-                            if row[3] <=  end_time:
+                            if row[2] <=  end_time:
                                 mega_entry = [float(start_time), float(row[2]), str(last_speaker)]
                                 list_mega.append(mega_entry)
 
                                 # Interrupting Contained megsegment
-                                speaker = last_speaker + '+' + str(row[1])
+                                speaker = last_speaker + '+' + str(row[3])
                                 mega_entry = [float(row[2]), float(row[3]), str(speaker)]
                                 list_mega.append(mega_entry)
 
                                 # New megasegment for original speaker (or next speaker if both speakers complete at same time)
-                                if end_time == row[3] and i != list_len:
-                                    last_speaker = list_tran[i][1]
-                                start_time = float(row[3])
+                                if end_time == row[2] and i != list_len:
+                                    last_speaker = list_tran[i][3]
+                                start_time = float(row[1])
 
                             else:  # Speaker 2' overlap is NOT entirely contained within speaker 1's speech
-                                mega_entry = [float(start_time), float(row[2]), str(last_speaker)]
+                                mega_entry = [float(start_time), float(row[1]), str(last_speaker)]
                                 list_mega.append(mega_entry)
 
                                 # Overlapping megasegment
-                                speaker = last_speaker + '+' + str(row[1])
-                                mega_entry = [float(row[2]), end_time, str(speaker)]
+                                speaker = last_speaker + '+' + str(row[3])
+                                mega_entry = [float(row[1]), end_time, str(speaker)]
                                 list_mega.append(mega_entry)
 
                                 # New megasegment for interruping speaker
                                 start_time = end_time
-                                last_speaker = str(row[1])
-                                end_time = float(row[3])
+                                last_speaker = str(row[3])
+                                end_time = float(row[2])
 
                     # Label last row
                     if i >= list_len:
@@ -395,7 +395,7 @@ class TimeFeaturizer(Featurizer):
                         break
 
                 # Label lab file
-                list_lab, unlabeled = self.label_lab_file(list_lab, list_mega, offset, trans_path.split('/')[-1])
+                list_lab, unlabeled = self.label_lab_file(list_lab, list_mega, offset, trans_path.name.split('/')[-1])
                 unlabeled_labs = unlabeled_labs + unlabeled
 
                 # Output each transcript file's megasegment
@@ -515,6 +515,22 @@ class TimeFeaturizer(Featurizer):
                 #continue
 
             file_split = filename.split('_')
+            if len(file_split) == 7:
+                study_name = file_split[0]
+                user_id = file_split[1]
+                timepoint = file_split[2]
+                sample_id = file_split[3]
+                version = file_split[4]
+                task = file_split[5]
+                stimulus = file_split[6]
+            else:
+                study_name = str(self.outdirs)
+                user_id = filename
+                timepoint = "T0"
+                sample_id = "1"
+                version = "1"
+                task = "1"
+                stimulus = "1"
 
             labs_df = pd.read_csv(file,
                                    header=None,
@@ -525,13 +541,7 @@ class TimeFeaturizer(Featurizer):
                 reader = csv.reader(f, delimiter="\t")
                 labs_list = list(reader)
 
-            study_name = file_split[0]
-            user_id = file_split[1]
-            timepoint = file_split[2]
-            sample_id = file_split[3]
-            version = file_split[4]
-            task = file_split[5]
-            stimulus = file_split[6]
+
             labs_df['duration'] = labs_df['end'] - labs_df['start']
 
             # Group by speech-type and speaker, and aggregate the durations

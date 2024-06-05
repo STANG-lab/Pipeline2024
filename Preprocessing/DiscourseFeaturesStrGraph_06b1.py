@@ -42,7 +42,7 @@ from statistics import stdev
 
 class StructFeaturizer(Featurizer):
     def __init__(self, outdirs):
-        super().__init__(self, outdirs)
+        super().__init__(outdirs)
         # self.outdirs = outdirs
         # self.feat_dir = self.outdirs["Features"]
         # self.disc_feats = self.outdirs["Features/6_discourse_features/"]
@@ -76,11 +76,11 @@ class StructFeaturizer(Featurizer):
         try:
             entry["g_sq_aspl"] = nx.average_shortest_path_length(nx.to_undirected(G_seq))
         except:
-            pass
+            entry["g_sq_aspl"] = "inf"
         try:
             entry["g_sq_lscc"] = len(max(nx.strongly_connected_components(G_seq), key=len))
         except:
-            pass
+            entry["g_sq_lscc"] = 0
 
         parallel_edge = 0
         l2 = 0
@@ -113,11 +113,11 @@ class StructFeaturizer(Featurizer):
         try:
             entry["g_sq_cc"] = nx.average_clustering(G_seq2.to_directed())
         except:
-            pass
+            entry["g_sq_cc"] = 0
         try:
             entry["g_sq_largestclique"] = nx.approximation.large_clique_size(G_seq2)
         except:
-            pass
+            entry["g_sq_cc"] = 0
 
         diameter_rand = []
         aspl_rand = []
@@ -152,7 +152,7 @@ class StructFeaturizer(Featurizer):
         try:
             entry["g_sq_zlscc"] = (entry["g_sq_lscc"] - mean(lscc_rand)) / stdev(lscc_rand)
         except:
-            pass
+            entry["g_sq_zlscc"] = "inf"
         try:
             entry["g_sq_zdiameter"] = (entry["g_sq_diameter"] - mean(lscc_rand)) / stdev(
                 lscc_rand
@@ -173,7 +173,7 @@ class StructFeaturizer(Featurizer):
     def get_struc_graph_features(self):
         nlp = spacy.load("en_core_web_sm")
         df_strgfeatures = pd.DataFrame()
-        for aggregate in self.word_aggs.glob("*"):
+        for aggregate in self.word_agg.glob("*"):
             # if aggregate.split("_")[5] in ["JOU", "SOC", "PIC"]:
             # print(aggregate.split('_')[5])
             # print(drive_aggregate_in_path+aggregate)
@@ -301,7 +301,7 @@ class StructFeaturizer(Featurizer):
                 entry["g_30sq10_l3"] = entry["g_sq_l3"]
                 entry["g_30sq10_cc"] = entry["g_sq_cc"]
                 entry["g_30sq10_largestclique"] = entry["g_sq_largestclique"]
-                # entry["g_30sq10_zlscc"] = entry["g_sq_zlscc"]
+                entry["g_30sq10_zlscc"] = entry["g_sq_zlscc"]
                 # entry["g_30sq10_zdiameter"] = entry["g_sq_zdiameter"]
                 # entry["g_30sq10_zaspl"] = entry["g_sq_zaspl"]
                 # entry["g_30sq10_zcc"] = entry["g_sq_zcc"]

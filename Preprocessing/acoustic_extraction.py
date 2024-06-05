@@ -80,7 +80,7 @@ from abstract_featurizer import Featurizer
 
 class AcousticFeaturizer(Featurizer):
     def __init__(self, outdirs, aud_target, smile_path, config_path, smile_log_out=True):
-        super().__init__(self, outdirs)
+        super().__init__(outdirs)
         self.audio_path = aud_target
         # Alex's original code distinguishes two sources, denoised and raw files.
         # Instead, we analyze whichever is our audio target.
@@ -100,13 +100,14 @@ class AcousticFeaturizer(Featurizer):
         sub_results = []
 
         for file in self.audio_path.glob("*"):
-            file_path = os.path.join(audio_path, file)
-            outfile_path = os.path.join(output_path, file.split('.wav')[0]+'.csv')
+            #file_path = os.path.join(audio_path, file)
+            #outfile_path = os.path.join(output_path, file.split('.wav')[0]+'.csv')
+            outfile_path = self.smile_out / (file.name.split(".")[0] + '.csv')
 
-            args = [self.smile_command, "-C", self.config_path, "-I", file_path, "-O", outfile_path]
-            print("Processing file: ", file_path)
+            args = [self.smile_command, "-C", self.config_path, "-I", file, "-O", outfile_path]
+            print("Processing file: ", file)
             sub_results.append(subprocess.run(args, capture_output=True))
-
+        print(sub_results)
         return sub_results
 
     def process_smiles(self):
@@ -114,7 +115,7 @@ class AcousticFeaturizer(Featurizer):
         #               os.path.isfile(os.path.join(smile_files_path, f)) and not f.startswith(
         #                   '.')]  # infs hidden files and ignores folders
 
-        pre_smiles = self.smile_out.glob("*.csv")
+        pre_smiles = self.smile_out.glob("*")
         # print("Total # openSMILE files:")
         # print(len(pre_smiles))
 
@@ -133,7 +134,6 @@ class AcousticFeaturizer(Featurizer):
             lab_name = smile_name.name.split('.')[0] + "_LABELED.lab"
             # lab_path = os.path.join(lab_files_path, lab_name)
             lab_path = self.sad_postlab / lab_name
-
             with open(smile_path, newline='') as f:
                 reader = csv.reader(f, delimiter=";")
                 smile = list(reader)

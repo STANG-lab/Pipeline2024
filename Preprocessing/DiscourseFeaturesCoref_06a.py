@@ -10,6 +10,7 @@ import string
 import statistics
 import numpy as np
 from allennlp_models import pretrained
+from abstract_featurizer import Featurizer
 
 # In[66]:
 
@@ -44,9 +45,9 @@ def clean_content(turn_content):
     return " ".join(turn_content).replace("  ", " ").replace(" .", ".").replace(" !", "!").replace(" ,", ",").replace(" ?", "?").replace("#", "").replace(" ' ", "'").replace(" '", "'").replace("  ", " ")
 
 # In[ ]:
-class CorefFeaturizer:
+class CorefFeaturizer(Featurizer):
     def __init__(self, outdirs):
-        self.word_aggs = outdirs["Features/word_aggregates"]
+        super().__init__(outdirs)
         self.coref_dir = outdirs["Features/6_discourse_features/6a_coreferences/"]
         self.feature_folder = outdirs["Features"]
 
@@ -54,9 +55,10 @@ class CorefFeaturizer:
         self.get_coref_features()
     ### Coreference
     def make_coref_csvs(self):
-        coref_labeler = pretrained.load_predictor("coref-spanbert")
+        print("Save our souls")
+        coref_labeler = pretrained.load_predictor("coref-spanbert", cuda_device=0)
         speakers = {"Subject": "Participant", "Interviewer": "Interviewer", "Other": "Other"}
-        for aggregate in self.word_aggs:
+        for aggregate in self.word_agg.glob("*"):
             # if aggregate.split("_")[5] in ["JOU", "SOC", "PIC", "BTW"]:
             # print(aggregate.split('_')[5])
             # print(drive_aggregate_in_path+aggregate)

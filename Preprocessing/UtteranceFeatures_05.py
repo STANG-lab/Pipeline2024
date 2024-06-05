@@ -62,8 +62,8 @@ class UtteranceFeaturizer(Featurizer):
     def get_sent_csvs(self):
         all_aggregate_files = self.word_agg.glob("*")
         speechact_model = DialogTag("distilbert-base-uncased")
-        dep_parser = pretrained.load_predictor("structured-prediction-biaffine-parser")
-        srl_labeler = pretrained.load_predictor("structured-prediction-srl-bert")
+        dep_parser = pretrained.load_predictor("structured-prediction-biaffine-parser", cuda_device=0)
+        srl_labeler = pretrained.load_predictor("structured-prediction-srl-bert", cuda_device=0)
         for aggregate in all_aggregate_files:
             # if aggregate.split("_")[5] in ["SOC", "PIC", "JOU", "BTW"]:
             # print(aggregate.split('_')[5])

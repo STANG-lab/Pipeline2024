@@ -374,8 +374,8 @@ def extract_token_df(transcript):
                                            'is_unintelligible', 'is_repetition', 'is_partial', 'is_punctuation', 'is_modal',
                                            'is_phi', 'is_neologism', 'is_noise', 'is_laugh', 'is_filledpause',
                                             'is_uh', 'is_um', 'is_er'])
-    # in_cols = ['none', 'speaker', 'start_s', 'end_s', 'content']
-    in_cols = ['speaker', 'start_s', 'end_s', 'content']
+    in_cols = ['none', 'start_s', 'end_s','speaker', 'content']
+    # in_cols = ['speaker', 'start_s', 'end_s', 'content']
     t_df = pd.read_csv(transcript, sep="\t", names=in_cols)
     t_token_stack = transform_t_df_token_stack(t_df, transcript.name.split('.')[0])
     sentence_id = 0
@@ -383,7 +383,7 @@ def extract_token_df(transcript):
     while not t_token_stack.is_empty():
         t_token = t_token_stack.pop()
         t_token.sentence_id = sentence_id
-        token_dfs.append(pd.DataFrame.from_records(t_token.to_dictionary(), index=[0]))
+        token_dfs.append(pd.DataFrame.from_records(t_token.to_dictionary(), index=[1]))
         if t_token.word in [".", "?", "!"]:
             sentence_id = sentence_id + 1
     return pd.concat(token_dfs, ignore_index=True)

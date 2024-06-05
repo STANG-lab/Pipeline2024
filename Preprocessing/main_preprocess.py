@@ -1,7 +1,6 @@
 # Call all other processes, meant just to hold args and defaults, and to control imports judiciously when possible.
 
 
-
 import argparse
 import subprocess
 from cleanASR import clean
@@ -28,14 +27,14 @@ if __name__ == "__main__":
     parser.add_argument('--asr', help="Process files with ASR", default=False)
     parser.add_argument('--override_asr', help="Redo all transcriptions", default=False)  # This should usually stay False.
     parser.add_argument('--phi-flag', help="PHI flag data", default=False)
-    parser.add_argument('--word_agg', help="Generate word aggregates from data (3)", default=True)
+    parser.add_argument('--word_agg', help="Generate word aggregates from data (3)", default=False)
 
     # Feature generation commands.
     parser.add_argument('--UD', help="Generate UD features", default=False)
-    parser.add_argument('--word_features', help="Generate lexical features (4)", default=True)
+    parser.add_argument('--word_features', help="Generate lexical features (4)", default=False)
 
     # TODO: Encapsulate these in Allen NLP environment
-    parser.add_argument('--sentence_features', help="Generate sentence features", default=False)
+    parser.add_argument('--sentence_features', help="Generate sentence features", default=True)
     parser.add_argument('--coref', help="Generate coreference discourse features", default=False)
     parser.add_argument('--seq_graph', help="Generate sequential graph features", default=False)
 
@@ -131,7 +130,9 @@ if __name__ == "__main__":
     if args.time:
         from time_extraction import TimeFeaturizer
         TimeFeaturizer(out_dirs, target_audios, text_feature_target)
-
+    if args.acoustics:
+        from acoustic_extraction import AcousticFeaturizer
+        AcousticFeaturizer(out_dirs, target_audios, "opensmile-master/build/progsrc/smilextract/SMILExtract", "opensmile-master/config/gemaps/v01a")
     # # TODO: ISOLATE THESE WITH ASSERT STATEMENT
     if args.sentence_features:  # install allennlp and DialogTag
         from UtteranceFeatures_05 import UtteranceFeaturizer
